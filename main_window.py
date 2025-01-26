@@ -48,17 +48,20 @@ class MainWindow(QMainWindow):
         self.gl_widget.setMinimumSize(800, 600)
         layout.addWidget(self.gl_widget, stretch=2)
 
-        # Try to load 3D model
+        # Control Panel setup
+        self.control_panel = ControlPanel()
+        self.setup_control_connections()
+        layout.addWidget(self.control_panel, stretch=1)
+
+        # Load model after GL context is created
+        QTimer.singleShot(100, self.load_model)  # Delay model loading
+
+    def load_model(self):
         try:
             success = self.gl_widget.load_model("10131_BaseballCap_v2_L3.obj")
             print(f"Model loading {'successful' if success else 'failed'}")
         except Exception as e:
             print(f"Failed to load model: {e}")
-
-        # Control Panel setup
-        self.control_panel = ControlPanel()
-        self.setup_control_connections()
-        layout.addWidget(self.control_panel, stretch=1)
 
     def setup_control_connections(self):
         # Connect control panel signals
