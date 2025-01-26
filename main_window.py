@@ -48,6 +48,13 @@ class MainWindow(QMainWindow):
         self.gl_widget.setMinimumSize(800, 600)
         layout.addWidget(self.gl_widget, stretch=2)
 
+        # Try to load 3D model
+        try:
+            success = self.gl_widget.load_model("10131_BaseballCap_v2_L3.obj")
+            print(f"Model loading {'successful' if success else 'failed'}")
+        except Exception as e:
+            print(f"Failed to load model: {e}")
+
         # Control Panel setup
         self.control_panel = ControlPanel()
         self.setup_control_connections()
@@ -71,15 +78,22 @@ class MainWindow(QMainWindow):
         if not success:
             return
 
+        # Convert BGR to RGB
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Process with MediaPipe
         image.flags.writeable = False
         results = self.face_mesh.process(image)
         image.flags.writeable = True
 
+        # Update OpenGL widget
         self.gl_widget.update_camera_image(image)
-        if results.multi_face_landmarks:
-            self.gl_widget.update_model_position(
-                results.multi_face_landmarks[0].landmark)
+
+        # Clear landmarks if no face is detected
+        if not results.multi_face_landmarks:
+            self.gl_widget.update_model_position(None)  # Pass None when no face is detected
+        else:
+            self.gl_widget.update_model_position(results.multi_face_landmarks[0].landmark)
 
     def closeEvent(self, event):
         self.cap.release()
